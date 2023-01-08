@@ -6,8 +6,7 @@ jobs:
     docker:
       - image: alpine
     steps:
-      - run: echo "this is the build job"
-
+      - run: docker login -umilan.jecmenica@gmail.com totalbot123demo.jfrog.io -p${JFROG_DOCKER_API_KEY}
 
 # Orchestrate our job run sequence
 workflows:
