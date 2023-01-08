@@ -1,0 +1,65 @@
+basePath: /api/v1
+definitions:
+  models.LocationProcessing:
+    properties:
+      date:
+        type: string
+      username:
+        type: string
+      x:
+        type: number
+      "y":
+        type: number
+    type: object
+host: localhost:8001
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: This is a sample server celler server.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Swagger Example API
+  version: "1.0"
+paths:
+  /user/location/:
+    post:
+      consumes:
+      - application/json
+      description: get string by ID
+      parameters:
+      - description: LocationProcessing with new coordiates
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.LocationProcessing'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.LocationProcessing'
+        "400":
+          description: ok
+          schema:
+            type: string
+        "404":
+          description: ok
+          schema:
+            type: string
+        "500":
+          description: ok
+          schema:
+            type: string
+      summary: Show an account
+      tags:
+      - accounts
+securityDefinitions:
+  BasicAuth:
+    type: basic
+swagger: "2.0"

@@ -1,0 +1,17 @@
+# Create
+curl localhost:8001/api/v1/location/user -d '{
+  "username": "test_user",
+  "x": 41.232132,
+  "y": 75.12
+}'
+
+# PATCH
+curl -X PATCH localhost:8001/api/v1/location/user -d '{
+  "username": "girl",
+  "x": 40.232132,
+  "y": 74.12
+}'
+
+
+# Distance travelled
+curl 'localhost:8002/api/v1/history/girl?start_date=2022-12-28T09:58:59&end_date=2022-12-30T10:01:08'
