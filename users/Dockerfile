@@ -1,10 +1,7 @@
-FROM golang:alpine
+FROM alpine
 
-ARG EXE=users
+ENV EXE=users
 
-COPY . /usr/local
-COPY ../proto /usr/local/proto
-WORKDIR /usr/local
-RUN ./build.sh
+COPY bin/${EXE} /bin/${EXE}
 
-# # CMD ["./${EXE}"]
+CMD ["sh", "-c", "${EXE}"]

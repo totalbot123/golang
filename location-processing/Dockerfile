@@ -1,17 +1,8 @@
-FROM golang:alpine as builder
+FROM alpine
 
-ARG EXE=location-processing
-ENV GOOS=linux
-ENV GOARCH=arm64
+ARG EXE
+ENV EXE=${EXE}
 
-COPY . /usr/local
-COPY ../proto /usr/local/proto
-WORKDIR /usr/local
-RUN ./build.sh
-RUN chmod +x bin/${EXE}
+COPY bin/${EXE} /bin/${EXE}
 
-# FROM alpine
-
-# COPY /user/local/src/bin/${EXE} /bin/${EXE}
-
-# CMD ["/bin/${EXE}"]
+CMD ["sh", "-c", "${EXE}"]
