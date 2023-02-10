@@ -65,16 +65,16 @@ commands:
     steps:
       - run: 
           name: Helm template
-          command: helm template test ${CIRCLE_PROJECT_REPONAME} -f example.yaml
+          command: helm template test chart/${CIRCLE_PROJECT_REPONAME} -f chart/example.yaml
   helm-release:
     steps:
       - run:
           name: Helm package
-          command: helm package ${CIRCLE_PROJECT_REPONAME}
+          command: helm package chart/${CIRCLE_PROJECT_REPONAME}
       - run:
           name: Helm Publish
           command: |
-            VERSION=$(grep 'version ' deployment-chart/Chart.yaml | awk '{print $3}')
+            VERSION=$(grep 'version ' chart/${CIRCLE_PROJECT_REPONAME}/Chart.yaml | awk '{print $3}')
             curl -umilan.jecmenica@gmail.com:${DOCKER_PASSWORD} -T ${CIRCLE_PROJECT_REPONAME}-${VERSION}.tgz "https://totalbot123demo.jfrog.io/artifactory/golang-helm/${CIRCLE_PROJECT_REPONAME}-${VERSION}.tgz"
 
 # Define the jobs we want to run for this project
