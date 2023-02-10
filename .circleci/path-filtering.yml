@@ -4,15 +4,20 @@ executors:
   base:
     docker:
       - image: cimg/go:1.19.4
+  helm:
+    docker:
+      - image: dtzar/helm-kubectl
 
 parameters:
-  service:
-    type: enum
-    enum: [ users, location-processing ]
-    default: users
+  directory:
+    type: string
+    default: ""
   all:
     type: boolean
     default: false
+  chart:
+    type: string
+    default: deployment-chart
 
 commands:
   docker_authenticate:
@@ -23,74 +28,100 @@ commands:
       - run: docker login -u${DOCKER_USER} ${DOCKER_SERVER} -p${DOCKER_PASSWORD}
   build-binary:
     parameters:
-      service:
+      directory:
         type: string
     steps:
-      - run: ./build.sh <<parameters.service>>
+      - run: ./build.sh <<parameters.directory>>
   build:
     parameters:
-      service:
+      directory:
         type: string
     steps:
-      - run: ./build.sh <<parameters.service>>
+      - run: ./build.sh <<parameters.directory>>
       - run: |
-          cd <<parameters.service>>
-          docker build . -t ${DOCKER_SERVER}/${DOCKER_REPOSITORY}/<<parameters.service>>:${CIRCLE_SHA1}
+          cd <<parameters.directory>>
+          docker build . -t ${DOCKER_SERVER}/${DOCKER_REPOSITORY}/<<parameters.directory>>:${CIRCLE_SHA1}
       - run:
           name: Archive Docker image
-          command: docker save --output image-<<parameters.service>>.tar "${DOCKER_SERVER}/${DOCKER_REPOSITORY}/<<parameters.service>>:${CIRCLE_SHA1}"
+          command: docker save --output image-<<parameters.directory>>.tar "${DOCKER_SERVER}/${DOCKER_REPOSITORY}/<<parameters.directory>>:${CIRCLE_SHA1}"
       - persist_to_workspace:
           root: .
           paths:
-            - ./image-<<parameters.service>>.tar
+            - ./image-<<parameters.directory>>.tar
   publish:
     parameters:
-      service:
+      directory:
         type: string
     steps:
       - attach_workspace:
           at: /tmp/workspace
       - run:
           name: Load Docker image
-          command: docker load --input /tmp/workspace/image-<<parameters.service>>.tar
+          command: docker load --input /tmp/workspace/image-<<parameters.directory>>.tar
       - run:
           name: Publish Docker image
-          command: docker push ${DOCKER_SERVER}/${DOCKER_REPOSITORY}/<<parameters.service>>:${CIRCLE_SHA1}
+          command: docker push ${DOCKER_SERVER}/${DOCKER_REPOSITORY}/<<parameters.directory>>:${CIRCLE_SHA1}
+  helm-validate:
+    steps:
+      - run: 
+          name: Helm template
+          command: helm template test ${CIRCLE_PROJECT_REPONAME} -f example.yaml
+  helm-release:
+    steps:
+      - run:
+          name: Helm package
+          command: helm package ${CIRCLE_PROJECT_REPONAME}
+      - run:
+          name: Helm Publish
+          command: |
+            VERSION=$(grep 'version ' deployment-chart/Chart.yaml | awk '{print $3}')
+            curl -umilan.jecmenica@gmail.com:${DOCKER_PASSWORD} -T ${CIRCLE_PROJECT_REPONAME}-${VERSION}.tgz "https://totalbot123demo.jfrog.io/artifactory/golang-helm/${CIRCLE_PROJECT_REPONAME}-${VERSION}.tgz"
 
 # Define the jobs we want to run for this project
 jobs:
   build-binary:
     executor: base
     parameters:
-      service:
+      directory:
         type: string
     steps:
       - checkout
       - build-binary:
-          service: <<parameters.service>>
+          directory: <<parameters.directory>>
   build:
     executor: base
     environment:
-      SERVICE: users
+      directory: users
     parameters:
-      service:
+      directory:
         type: string
     steps:
       - docker_authenticate
       - checkout
       - build:
-          service: <<parameters.service>>
+          directory: <<parameters.directory>>
   publish:
     executor: base
     environment:
-      SERVICE: users
+      directory: users
     parameters:
-      service:
+      directory:
         type: string
     steps:
       - docker_authenticate
       - publish:
-          service: <<parameters.service>>
+          directory: <<parameters.directory>>
+  test-chart:
+    executor: helm
+    steps:
+      - checkout
+      - helm-validate
+  release-chart:
+    executor: helm
+    steps:
+      - checkout
+      - helm-release
+  
     
 workflows:
   all:
@@ -99,30 +130,43 @@ workflows:
         - << pipeline.parameters.all >> 
     jobs:
       - build-binary:
-          service: proto
+          directory: proto
 
   users:
     when: 
       or: 
-        - equal: [ users, << pipeline.parameters.service >> ]
+        - equal: [ users, << pipeline.parameters.directory >> ]
         - << pipeline.parameters.all >> 
     jobs:
       - build:
-          service: users
+          directory: users
       - publish:
-          service: users
+          directory: users
           requires:
             - build
       
   location-processing:
     when: 
       or: 
-        - equal: [ location-processing, << pipeline.parameters.service >> ]
+        - equal: [ location-processing, << pipeline.parameters.directory >> ]
         - << pipeline.parameters.all >> 
     jobs:
       - build:
-          service: location-processing
+          directory: location-processing
       - publish:
-          service: location-processing
+          directory: location-processing
           requires:
             - build
+
+  chart:
+    jobs:
+      - test-chart
+      - release-chart:
+          context:
+            - Artifactory
+          requires:
+            - test-chart
+          filters:
+            branches:
+              only:
+                - master

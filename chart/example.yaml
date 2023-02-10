@@ -1,0 +1,56 @@
+type: cloudrun
+
+application:
+  image:
+    repository: test
+    tag: test
+
+  resources:
+    requests:
+      memory: "300Mi"
+      cpu: "300m"
+    limits:
+      memory: "300Mi"
+      cpu: "300m"
+
+  containerPort: 8000
+
+  startupProbe:
+    httpPath: /
+
+  livenessProbe:
+    httpPath: /
+    
+  readinessProbe:
+    httpPath: /
+
+  env:
+  - name: test
+    value: test
+  - name: SFTP_HOST
+    value: projectverte.files.com
+  - name: SFTP_PORT
+    value: 22
+  - name: SFTP_USERNAME
+    value: test-dhl
+  - name: PROJECT_ID
+
+  logLevel: info
+
+replicas: 1
+hpa:
+  enabled: true
+
+cloudsql:
+  enabled: true
+  instances: test
+
+serviceAccountName: gke-workload-test
+
+service:
+  ports:
+  - 80
+  - 9090
+
+endpoint:
+  pathPrefix: "/"

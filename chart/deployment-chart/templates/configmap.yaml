@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-logging
+data:
+  logging.yaml: |-
+    log_level: {{ .Values.application.logLevel }}

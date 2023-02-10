@@ -1,0 +1,25 @@
+{{ if eq ((.Values).type) "kubernetes" }}
+{{ if ne .Values.endpoint.pathPrefix "" }}
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: "{{ .Release.Name }}-entrypoint"
+spec:
+  gateways:
+  - istio-system/global-gateway
+  hosts:
+  - "{{ .Release.Name }}.{{ .Release.Namespace }}"
+  - "{{ .Release.Name }}.{{ .Release.Namespace }}.svc.cluster.local"
+  http:
+  - match:
+    - uri:
+        prefix: {{ .Values.endpoint.pathPrefix }}
+    route:
+    - destination:
+        # Destination is your Kubernetes Service of type ClusterIP
+        host: "{{ .Release.Name }}.{{ .Release.Namespace }}.svc.cluster.local"
+        port:
+          number: 80
+      weight: 100
+{{ end }}
+{{ end }}

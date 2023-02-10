@@ -1,0 +1,81 @@
+{{ template "chart.header" . }}
+{{ template "chart.description" . }}
+
+{{ template "chart.versionBadge" . }}{{ template "chart.typeBadge" . }}{{ template "chart.appVersionBadge" . }}
+
+## Installing the Chart
+
+Authentication: https://cloud.google.com/artifact-registry/docs/helm/store-helm-charts#auth
+
+```console
+$ helm upgrade --install ingress oci://us-docker.pkg.dev/at-common-artifacts-78b4/deployment-chart/deployment-chart \
+    --namespace <NAMESPACE> \
+    --create-namespace \
+    --values values.yaml \
+```
+
+Where values.yaml looks like:
+
+```yaml
+type: cloudrun
+
+application:
+  image:
+    repository: us-docker.pkg.dev/at-common-artifacts-78b4/pilotone-lle/demoone
+    tag: dea91d50540b8bc79ce393962d873572d293486a
+  
+  resources:
+    requests:
+      memory: "300Mi"
+      cpu: "300m"
+    limits:
+      memory: "300Mi"
+      cpu: "300m"
+  
+  containerPort: 8080
+  
+  startupProbe:
+    httpPath: /
+    failureThreshold: 30
+    periodSeconds: 10
+  
+  readinessProbe: 
+    httpPath: /
+    periodSeconds: 5
+  
+  livenessProbe:
+    httpPath: /actuator/health
+    periodSeconds: 5
+  
+  env:
+  - name: test
+    values: test
+
+  logLevel: error
+
+cloudsql:
+  enabled: false
+  instances: test
+
+replicas: 1
+hpa:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 2
+  targetCPUUtilizationPercentage: 70
+
+serviceAccountName: gke-workload-test
+
+service:
+  ports:
+  - 80
+
+endpoint: {}
+```
+
+
+{{ template "chart.requirementsSection" . }}
+
+{{ template "chart.valuesSection" . }}
+
+{{ template "helm-docs.versionFooter" . }}

@@ -1,0 +1,74 @@
+# -- Type of the resources to be used (Vanilla kubernetes or Cloud Run). ** Must be one of: kubernetes, cloudrun. **
+type: kubernetes
+
+application:
+  image:
+    # -- **REQUIRED** Image to be used for application
+    repository: ""
+    # -- **REQUIRED** Tag used to specify the image
+    tag: ""
+  
+  # -- Pod resource requests & limits 
+  resources: {}
+    # requests:
+    #   memory: "300Mi"
+    #   cpu: "300m"
+    # limits:
+    #   memory: "300Mi"
+    #   cpu: "300m"
+  
+  # -- Container port to use for http. Defaults to 8080
+  containerPort: 8080
+  
+  # -- Startup probe definition. Has no effect for Cloud Run services.
+  startupProbe: {}
+  #   httpPath: /actuator/health
+  #   failureThreshold: 30
+  #   periodSeconds: 10
+  
+  # -- Readiness probe definition
+  readinessProbe: {}
+  #   httpPath: /actuator/health
+  #   periodSeconds: 5
+  
+  # -- Liveness probe definition
+  livenessProbe: {}
+  #   httpPath: /actuator/health
+  #   periodSeconds: 5
+  
+  # -- List of environment variables 
+  env: []
+  # - name: test
+  #   value: test
+
+  # -- Log level set for the application
+  logLevel: info
+
+cloudsql:
+  # -- Creates Cloud SQL container as a side-car
+  enabled: false
+  # -- **REQUIRED if cloudsql is enabled** Database instance to which Cloud SQL is connecting.
+  instances: 
+
+# -- Number of pods to be created. Ignored if hpa.test is set to `true`
+replicas: 1
+hpa:
+  # -- Enables HPA
+  enabled: false
+  # -- Set minimum number of replicas
+  minReplicas: 1
+  # -- Set minimum number of replicas
+  maxReplicas: 2
+  # -- Target Percentage for when autoscaling takes affect.
+  targetCPUUtilizationPercentage: 70
+
+# -- Name of the K8s service account to be used by the workload
+serviceAccountName: ""
+
+service:
+  # -- Ports enabled on ClusterIP service. Port `80` is enabled by default.
+  ports: []
+
+endpoint:
+  # -- Enables routing through Istio Ingressgateway. Has no effect for Cloud Run services.
+  pathPrefix: ""

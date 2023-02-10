@@ -1,0 +1,5 @@
+apiVersion : v2
+name       : deployment-chart
+description: Helm chart for deployment of applications to K8s and Knative.
+type       : application
+version    : 0.0.1

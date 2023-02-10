@@ -1,0 +1,41 @@
+type: kubernetes
+
+application:
+  image:
+    repository: totalbot123demo.jfrog.io/demo-totalbot123-docker/users
+    tag: d5812389d0fcc774adb31cfa61cebf3de64e3ebe
+
+  resources:
+    requests:
+      memory: "300Mi"
+      cpu: "300m"
+    limits:
+      memory: "300Mi"
+      cpu: "300m"
+
+  containerPort: 8000
+
+  startupProbe:
+    httpPath: /
+
+  livenessProbe:
+    httpPath: /
+    
+  readinessProbe:
+    httpPath: /
+
+  logLevel: info
+
+replicas: 1
+# hpa:
+#   enabled: true
+
+# serviceAccountName: gke-workload-test
+
+service:
+  ports:
+  - 80
+  - 8080
+
+# endpoint:
+#   pathPrefix: "/"

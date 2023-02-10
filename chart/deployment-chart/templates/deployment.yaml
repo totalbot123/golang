@@ -1,0 +1,20 @@
+{{ if eq ((.Values).type) "kubernetes" }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}
+spec:
+  replicas: {{ .Values.replicas }}
+  selector:
+    matchLabels:
+      {{- include "app.labels" . | nindent 6 }}
+  template:
+    {{- include "metadata" . | nindent 4 }}
+    spec:
+      {{- include "serviceAccount" . | nindent 6 }}
+      containers:
+        {{- include "app" . | indent 8 }}
+      restartPolicy: Always
+      volumes:
+{{ include "volume.logging" . | indent 8 -}}
+{{ end }}

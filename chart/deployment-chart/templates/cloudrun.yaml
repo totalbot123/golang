@@ -1,0 +1,22 @@
+{{ include "typeCheck" . }}
+{{ if eq .Values.type "cloudrun" }}
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}
+  labels:
+  {{- include "cloudrun.labels" . | nindent 4 }}
+spec:
+  template:
+  {{- include "metadata" . | nindent 4 }}
+    spec:
+      {{- include "serviceAccount" . | nindent 6 }}
+      containers:
+        {{- include "app" . | nindent 8 }}
+      volumes:
+        {{- include "volume.logging" . | nindent 8 }}
+      timeoutSeconds: 300
+  traffic:
+  - percent: 100
+    latestRevision: true
+{{ end }}
