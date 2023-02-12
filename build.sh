@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 MODULE_NAME=$1
 
@@ -9,4 +9,4 @@ go mod edit -replace example.com/protobuff=../proto
 go mod tidy
 go mod vendor
 echo "Building Module"
-go build -o ./bin/$MODULE_NAME
+CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -a -installsuffix cgo -o ./bin/$MODULE_NAME

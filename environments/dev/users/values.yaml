@@ -2,7 +2,7 @@ type: kubernetes
 
 application:
   image:
-    repository: totalbot123demo.jfrog.io/demo-totalbot123-docker/users
+    repository: us-central1-docker.pkg.dev/masters-degree-mj/users-service/users
     tag: d5812389d0fcc774adb31cfa61cebf3de64e3ebe
 
   resources:

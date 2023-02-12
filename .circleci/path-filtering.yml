@@ -1,9 +1,12 @@
 version: 2.1
 
 executors:
+  golang:
+    docker:
+      - image: golang:1.19.2-alpine
   base:
     docker:
-      - image: cimg/go:1.19.4
+      - image: cimg/base:2023.02
   helm:
     docker:
       - image: dtzar/helm-kubectl
@@ -32,13 +35,19 @@ commands:
         type: string
     steps:
       - run: ./build.sh <<parameters.directory>>
-  build:
+      - persist_to_workspace:
+          root: .
+          paths:
+            - ./<<parameters.directory>>/bin/<<parameters.directory>>
+  build-image:
     parameters:
       directory:
         type: string
     steps:
-      - run: ./build.sh <<parameters.directory>>
+      - attach_workspace:
+          at: /tmp/workspace
       - run: |
+          cp /tmp/workspace/<<parameters.directory>> <<parameters.directory>>
           cd <<parameters.directory>>
           docker build . -t ${DOCKER_SERVER}/${DOCKER_REPOSITORY}/<<parameters.directory>>:${CIRCLE_SHA1}
       - run:
@@ -80,7 +89,7 @@ commands:
 # Define the jobs we want to run for this project
 jobs:
   build-binary:
-    executor: base
+    executor: golang
     parameters:
       directory:
         type: string
@@ -88,22 +97,18 @@ jobs:
       - checkout
       - build-binary:
           directory: <<parameters.directory>>
-  build:
+  build-image:
     executor: base
-    environment:
-      directory: users
     parameters:
       directory:
         type: string
     steps:
       - docker_authenticate
       - checkout
-      - build:
+      - build-image:
           directory: <<parameters.directory>>
   publish:
     executor: base
-    environment:
-      directory: users
     parameters:
       directory:
         type: string
@@ -138,12 +143,16 @@ workflows:
         - equal: [ users, << pipeline.parameters.directory >> ]
         - << pipeline.parameters.all >> 
     jobs:
-      - build:
+      - build-binary:
           directory: users
+      - build-image:
+          directory: users
+          requires:
+            - build-binary
       - publish:
           directory: users
           requires:
-            - build
+            - build-image
       
   location-processing:
     when: 
@@ -151,12 +160,16 @@ workflows:
         - equal: [ location-processing, << pipeline.parameters.directory >> ]
         - << pipeline.parameters.all >> 
     jobs:
-      - build:
+      - build-binary:
           directory: location-processing
+      - build-image:
+          directory: location-processing
+          requires:
+            - build-binary
       - publish:
           directory: location-processing
           requires:
-            - build
+            - build-image
 
   chart:
     jobs:

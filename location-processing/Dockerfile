@@ -1,8 +1,7 @@
 FROM alpine
 
-ARG EXE
-ENV EXE=${EXE}
+ENV EXE=location-processing
 
 COPY bin/${EXE} /bin/${EXE}
 
-CMD ["sh", "-c", "${EXE}"]
+CMD ["bash", "-c", "/bin/${EXE}"]
