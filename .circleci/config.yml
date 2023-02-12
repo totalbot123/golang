@@ -12,8 +12,8 @@ workflows:
           base-revision: master
           config-path: .circleci/path-filtering.yml
           mapping: |
-            users/.* directory "users"
-            location-processing/.* directory "location-processing"
-            chart/.* directory "chart"
+            users/.* users true
+            location-processing/.* location-processing true
+            chart/.* chart true
             proto/.* all true
             environments/.* all false

@@ -12,15 +12,18 @@ executors:
       - image: dtzar/helm-kubectl
 
 parameters:
-  directory:
-    type: string
-    default: ""
+  users: 
+    type: boolean
+    default: false
+  location-processing:
+    type: boolean
+    default: false
   all:
     type: boolean
     default: false
   chart:
-    type: string
-    default: deployment-chart
+    type: boolean
+    default: false
 
 commands:
   docker_authenticate:
@@ -36,9 +39,9 @@ commands:
     steps:
       - run: ./build.sh <<parameters.directory>>
       - persist_to_workspace:
-          root: .
+          root: ./<<parameters.directory>>/bin
           paths:
-            - ./<<parameters.directory>>/bin/<<parameters.directory>>
+            - ./<<parameters.directory>>
   build-image:
     parameters:
       directory:
@@ -47,7 +50,8 @@ commands:
       - attach_workspace:
           at: /tmp/workspace
       - run: |
-          cp /tmp/workspace/<<parameters.directory>> <<parameters.directory>>
+          mkdir -p ./<<parameters.directory>>/bin
+          cp /tmp/workspace/<<parameters.directory>> ./<<parameters.directory>>/bin/<<parameters.directory>>
           cd <<parameters.directory>>
           docker build . -t ${DOCKER_SERVER}/${DOCKER_REPOSITORY}/<<parameters.directory>>:${CIRCLE_SHA1}
       - run:
@@ -140,7 +144,7 @@ workflows:
   users:
     when: 
       or: 
-        - equal: [ users, << pipeline.parameters.directory >> ]
+        - equal: [ true, << pipeline.parameters.users >> ]
         - << pipeline.parameters.all >> 
     jobs:
       - build-binary:
@@ -157,7 +161,7 @@ workflows:
   location-processing:
     when: 
       or: 
-        - equal: [ location-processing, << pipeline.parameters.directory >> ]
+        - equal: [ true, << pipeline.parameters.location-processing >> ]
         - << pipeline.parameters.all >> 
     jobs:
       - build-binary:
@@ -172,6 +176,9 @@ workflows:
             - build-image
 
   chart:
+    when: 
+      or: 
+        - equal: [ true, << pipeline.parameters.chart >> ]
     jobs:
       - test-chart
       - release-chart:
